@@ -16,8 +16,10 @@ pipeline {
 
   stages {
     stage("Checkout") {
-      steps { checkout scm }
-    }
+  steps {
+    git url: 'https://github.com/geetha1309/birds-app.git', branch: 'main'
+  }
+}
 
     stage("Unit Tests (pytest)") {
   agent {
