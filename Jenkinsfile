@@ -16,7 +16,10 @@ pipeline {
 
   stages {
     stage("Checkout") {
-  steps { checkout scm }
+  steps {
+    deleteDir()          // wipes workspace even if Jenkins UI didn’t
+    checkout scm         // uses the SCM config from the job
+  }
 }
 
     stage("Unit Tests (pytest)") {
