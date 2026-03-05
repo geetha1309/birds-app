@@ -16,9 +16,7 @@ pipeline {
 
   stages {
     stage("Checkout") {
-  steps {
-    git url: 'https://github.com/geetha1309/birds-app.git', branch: 'main'
-  }
+  steps { checkout scm }
 }
 
     stage("Unit Tests (pytest)") {
