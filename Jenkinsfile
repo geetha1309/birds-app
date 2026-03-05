@@ -20,15 +20,22 @@ pipeline {
     }
 
     stage("Unit Tests (pytest)") {
-      steps {
-        sh """
-          python3 -m venv .venv
-          . .venv/bin/activate
-          pip install -r requirements.txt pytest
-          pytest -q
-        """
-      }
+  agent {
+    docker {
+      image 'python:3.11'
+      args '-u root:root'
     }
+  }
+  steps {
+    sh '''
+      python -m venv .venv
+      . .venv/bin/activate
+      pip install --upgrade pip
+      pip install -r requirements.txt pytest
+      pytest -q
+    '''
+  }
+}
 
     stage("Build & Push Image to ECR") {
       steps {
