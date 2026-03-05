@@ -6,6 +6,7 @@ pipeline {
 }
 
   environment {
+    IMAGE_TAG = ""
     AWS_REGION = "eu-west-1"
 
     // CHANGE THIS to your ECR repo URL from terraform output:
@@ -23,6 +24,15 @@ pipeline {
   steps {
     deleteDir()          // wipes workspace even if Jenkins UI didn’t
     checkout scm         // uses the SCM config from the job
+  }
+}
+
+  stage("Compute Image Tag") {
+  steps {
+    script {
+      env.IMAGE_TAG = env.GIT_COMMIT.take(7)
+      echo "IMAGE_TAG=${env.IMAGE_TAG}"
+    }
   }
 }
 
@@ -58,8 +68,7 @@ pipeline {
     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
       sh """
         set -eux
-        GIT_SHA=\$(git rev-parse --short HEAD)
-        IMAGE="${ECR_REPO_URL}:\${GIT_SHA}"
+        IMAGE="${ECR_REPO_URL}:${IMAGE_TAG}"
 
         aws --version
         aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URL}
@@ -67,7 +76,7 @@ pipeline {
         docker build -t "\$IMAGE" .
         docker push "\$IMAGE"
 
-        echo "\$GIT_SHA" > image_tag.txt
+        echo "${IMAGE_TAG}" > image_tag.txt
       """
     }
   }
