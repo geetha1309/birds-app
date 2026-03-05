@@ -48,23 +48,30 @@ pipeline {
 }
 
     stage("Build & Push Image to ECR") {
-      steps {
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
-          sh """
-            set -eux
-            GIT_SHA=\$(git rev-parse --short HEAD)
-            IMAGE="${ECR_REPO_URL}:\${GIT_SHA}"
-
-            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URL}
-
-            docker build -t "\$IMAGE" .
-            docker push "\$IMAGE"
-
-            echo "\$GIT_SHA" > image_tag.txt
-          """
-        }
-      }
+  agent {
+    docker {
+      image 'amazon/aws-cli:2.17.0'
+      args '-u root:root -v /var/run/docker.sock:/var/run/docker.sock'
     }
+  }
+  steps {
+    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
+      sh """
+        set -eux
+        GIT_SHA=\$(git rev-parse --short HEAD)
+        IMAGE="${ECR_REPO_URL}:\${GIT_SHA}"
+
+        aws --version
+        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URL}
+
+        docker build -t "\$IMAGE" .
+        docker push "\$IMAGE"
+
+        echo "\$GIT_SHA" > image_tag.txt
+      """
+    }
+  }
+}
 
     stage("Update GitOps repo image tag") {
       steps {
