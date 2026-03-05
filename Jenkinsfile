@@ -22,7 +22,7 @@ pipeline {
     stage("Unit Tests (pytest)") {
   agent {
     docker {
-      image 'python:3.11'
+      image 'python:3.12-slim'
       args '-u root:root'
     }
   }
