@@ -102,7 +102,16 @@ pipeline {
         git config user.email "geetha1309@users.noreply.github.com"
         git config user.name "geetha1309"
 
-        perl -0777 -i -pe 's/(newTag:\\s*\\")([^"]+)(\\")/\\1'"$TAG"'\\3/g' apps/birds/overlays/prod/kustomization.yaml
+        python3 - <<PY
+from pathlib import Path
+import re
+path = Path("apps/birds/overlays/prod/kustomization.yaml")
+text = path.read_text()
+text = re.sub(r'newTag:\\s*"[^"]+"', f'newTag: "{TAG}"', text)
+path.write_text(text)
+PY
+
+        cat apps/birds/overlays/prod/kustomization.yaml
 
         git add apps/birds/overlays/prod/kustomization.yaml
         git commit -m "Deploy birds-app image tag $TAG" || true
