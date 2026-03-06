@@ -92,29 +92,41 @@ pipeline {
     withCredentials([usernamePassword(credentialsId: 'gitops-creds', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
       sh '''
         set -eux
+
         TAG=$(cat image_tag.txt)
+        export TAG
 
         rm -rf /tmp/birds-gitops
+
         git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/geetha1309/birds-gitops.git /tmp/birds-gitops
         cd /tmp/birds-gitops
+
         git checkout main
 
         git config user.email "geetha1309@users.noreply.github.com"
         git config user.name "geetha1309"
 
         python3 - <<PY
-from pathlib import Path
+import os
 import re
+from pathlib import Path
+
+tag = os.environ["TAG"]
+
 path = Path("apps/birds/overlays/prod/kustomization.yaml")
 text = path.read_text()
-text = re.sub(r'newTag:\\s*"[^"]+"', f'newTag: "{TAG}"', text)
+
+text = re.sub(r'newTag:\\s*"[^"]+"', f'newTag: "{tag}"', text)
+
 path.write_text(text)
 PY
 
         cat apps/birds/overlays/prod/kustomization.yaml
 
         git add apps/birds/overlays/prod/kustomization.yaml
+
         git commit -m "Deploy birds-app image tag $TAG" || true
+
         git push origin main
       '''
     }
