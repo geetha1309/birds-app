@@ -18,10 +18,17 @@ pipeline {
     IMAGE_NAME_IN_KUSTOMIZE = "REPLACED_BY_KUSTOMIZE"
   }
 
+
   stages {
+
+    stage("Clean Workspace") {
+  steps {
+    deleteDir()
+  }
+}
+
     stage("Checkout") {
   steps {
-    deleteDir()          // wipes workspace even if Jenkins UI didn’t
     checkout scm         // uses the SCM config from the job
   }
 }
