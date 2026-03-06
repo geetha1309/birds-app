@@ -67,12 +67,6 @@ pipeline {
 }
 
     stage("Build & Push Image to ECR") {
-  agent {
-    docker {
-      image 'amazon/aws-cli:2.17.0'
-      args "--entrypoint='' -u root:root -v /var/run/docker.sock:/var/run/docker.sock"
-    }
-  }
   steps {
     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
       sh '''
@@ -80,6 +74,8 @@ pipeline {
         IMAGE="${ECR_REPO_URL}:${IMAGE_TAG}"
 
         aws --version
+        docker --version
+
         aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URL}
 
         docker build -t "$IMAGE" .
