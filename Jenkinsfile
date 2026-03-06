@@ -30,7 +30,10 @@ pipeline {
   stage("Compute Image Tag") {
   steps {
     script {
-      env.IMAGE_TAG = env.GIT_COMMIT.take(7)
+      env.IMAGE_TAG = sh(
+        script: "git rev-parse --short HEAD",
+        returnStdout: true
+      ).trim()
       echo "IMAGE_TAG=${env.IMAGE_TAG}"
     }
   }
