@@ -88,25 +88,28 @@ pipeline {
 }
 
     stage("Update GitOps repo image tag") {
-      steps {
-        withCredentials([usernamePassword(credentialsId: 'gitops-creds', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
-          sh """
-            set -eux
-            TAG=\$(cat image_tag.txt)
+  steps {
+    withCredentials([usernamePassword(credentialsId: 'gitops-creds', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+      sh '''
+        set -eux
+        TAG=$(cat image_tag.txt)
 
-            rm -rf /tmp/birds-gitops
-            git clone https://\${GIT_USER}:\${GIT_TOKEN}@${GITOPS_REPO.replace('https://','')} /tmp/birds-gitops
-            cd /tmp/birds-gitops
-            git checkout ${GITOPS_BRANCH}
+        rm -rf /tmp/birds-gitops
+        git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/geetha1309/birds-gitops.git /tmp/birds-gitops
+        cd /tmp/birds-gitops
+        git checkout main
 
-            perl -0777 -i -pe 's/(newTag:\\s*\\")([^\"]+)(\\")/\\1'"\$TAG"'\\3/g' apps/birds/overlays/prod/kustomization.yaml
+        git config user.email "geetha1309@users.noreply.github.com"
+        git config user.name "geetha1309"
 
-            git add apps/birds/overlays/prod/kustomization.yaml
-            git commit -m "Deploy birds-app image tag \$TAG" || true
-            git push origin ${GITOPS_BRANCH}
-          """
-        }
-      }
+        perl -0777 -i -pe 's/(newTag:\\s*\\")([^"]+)(\\")/\\1'"$TAG"'\\3/g' apps/birds/overlays/prod/kustomization.yaml
+
+        git add apps/birds/overlays/prod/kustomization.yaml
+        git commit -m "Deploy birds-app image tag $TAG" || true
+        git push origin main
+      '''
     }
+  }
+}
   }
 }
