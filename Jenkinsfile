@@ -6,7 +6,6 @@ pipeline {
 }
 
   environment {
-    IMAGE_TAG = ""
     AWS_REGION = "eu-west-1"
 
     // CHANGE THIS to your ECR repo URL from terraform output:
@@ -69,18 +68,18 @@ pipeline {
   }
   steps {
     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
-      sh """
+      sh '''
         set -eux
         IMAGE="${ECR_REPO_URL}:${IMAGE_TAG}"
 
         aws --version
         aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URL}
 
-        docker build -t "\$IMAGE" .
-        docker push "\$IMAGE"
+        docker build -t "$IMAGE" .
+        docker push "$IMAGE"
 
         echo "${IMAGE_TAG}" > image_tag.txt
-      """
+      '''
     }
   }
 }
